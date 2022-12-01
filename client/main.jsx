@@ -8,9 +8,11 @@ const App = () => {
   const [isConnected, setIsConnected] = useState(socket.connected);
   const [room, setRoom]               = useState(null);
   const [username, setUsername]       = useState(null);
+  const [messages, setMessages]       = useState([]);
 
   const roomInputRef = useRef();
   const usernameInputRef = useRef();
+  const chatboxInputRef = useRef();
 
   const handleSocketConnect = () => {
     setIsConnected(true);
@@ -20,13 +22,20 @@ const App = () => {
     setIsConnected(false);
   }
 
-  const handleSocketRoomJoined = ({ roomCode, username }) => {
+  const handleSocketJoinRoom = ({ roomCode, username }) => {
     setRoom(roomCode);
     setUsername(username);
   }
 
-  const handleSocketUserJoined = ({ username }) => {
-    console.log({ username });
+  const handleSocketUpdateActiveUsers = ({ username }) => {
+    setMessages(currentMessages => [...currentMessages, {
+      message: `${username} joined...`,
+      username: '[ SYSTEM ]'
+    }])
+  }
+
+  const handleSocketReceiveMessage = ({ message, username }) => {
+    setMessages(currentMessages => [...currentMessages, { message, username }])
   }
 
   const handleJoinRoom = () => {
@@ -36,15 +45,25 @@ const App = () => {
     socket.emit('join', { roomCode, username });
   }
 
+  const handleSendMessage = () => {
+    const message = chatboxInputRef.current.value;
+
+    socket.emit('send-message', { room, message, username })
+  }
+
   useEffect(() => {
     socket.on('connect', handleSocketConnect);
     socket.on('disconnect', handleSocketDisconnect);
-    socket.on('room-joined', handleSocketRoomJoined);
-    socket.on('user-joined', handleSocketUserJoined);
+    socket.on('join-room', handleSocketJoinRoom);
+    socket.on('update-active-users', handleSocketUpdateActiveUsers);
+    socket.on('receive-message', handleSocketReceiveMessage);
 
     return () => {
       socket.off('connect');
       socket.off('disconnect');
+      socket.off('join-room');
+      socket.off('update-active-users');
+      socket.off('receive-message');
     };
   }, []);
 
@@ -65,7 +84,16 @@ const App = () => {
       )}
 
       {isInRoom && (
-        <div>{`In room: ${room} as ${username}`}</div>
+        <Fragment>
+          <div>{`In room: ${room} as ${username}`}</div>
+
+          <input type="text" placeholder="Enter message" ref={chatboxInputRef} />
+          <button onClick={handleSendMessage}>Send Message</button>
+
+          {messages.map(({ message, username }) => (
+            <div>{`${username}: ${message}`}</div>
+          ))}
+        </Fragment>
       )}
     </div>
   );
