@@ -4,7 +4,8 @@
   "description": "socket.io chatrooms",
   "main": "index.js",
   "scripts": {
-    "dev:client": "snowpack dev"
+    "dev:client": "snowpack dev",
+    "dev:server": "nodemon server"
   },
   "keywords": [
     "socket",
@@ -19,6 +20,7 @@
     "socket.io": "^4.5.3"
   },
   "devDependencies": {
+    "nodemon": "^2.0.20",
     "snowpack": "^3.8.8"
   }
 }
