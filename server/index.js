@@ -21,11 +21,11 @@ app.get('/api', (req, res) => {
 io.on('connection', (socket) => {
   console.log(`[ server.js ] ${socket.id} connected`);
 
-  socket.on('ping', () => {
-    console.log(`[ server.js ] Ping received from ${socket.id}`)
-
-    socket.emit('pong');
-  })
+  socket.on('join', ({ roomCode, username }) => {
+    socket.join(roomCode);
+    socket.emit('room-joined', { roomCode, username });
+    io.to(roomCode).emit('user-joined', { username });
+  });
 
   socket.on('disconnect', () => {
     console.log(`[ server.js ] ${socket.id} disconnected`);
