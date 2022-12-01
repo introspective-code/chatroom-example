@@ -6,37 +6,28 @@ const socket = io("http://localhost:8000");
 
 const App = () => {
   const [isConnected, setIsConnected] = useState(socket.connected);
-  const [lastPong, setLastPong] = useState(null);
+
+  const handleSocketConnect = () => {
+    setIsConnected(true);
+  }
+
+  const handleSocketDisconnect = () => {
+    setIsConnected(false);
+  }
 
   useEffect(() => {
-    socket.on('connect', () => {
-      setIsConnected(true);
-    });
-
-    socket.on('disconnect', () => {
-      setIsConnected(false);
-    });
-
-    socket.on('pong', () => {
-      setLastPong(new Date().toISOString());
-    });
+    socket.on('connect', handleSocketConnect);
+    socket.on('disconnect', handleSocketDisconnect);
 
     return () => {
       socket.off('connect');
       socket.off('disconnect');
-      socket.off('pong');
     };
   }, []);
 
-  const sendPing = () => {
-    socket.emit('ping');
-  }
-
   return (
     <div>
-      <p>Connected: { '' + isConnected }</p>
-      <p>Last pong: { lastPong || '-' }</p>
-      <button onClick={sendPing}>Send ping</button>
+      <h1>{ isConnected ? 'Connected' : 'Not Connected' }</h1>
     </div>
   );
 }
